@@ -1,3 +1,4 @@
+QBCore = exports['qb-core']:GetCoreObject()
 local identifier = "youtube_music2"
 
 CreateThread(function ()
@@ -69,6 +70,10 @@ RegisterNUICallback("stopSound", function(data, cb)
     playing = false
 end)
 
+RegisterNUICallback("saveSong", function(data, cb)
+    TriggerServerEvent("saveSong", data)
+end)
+
 Citizen.CreateThread(function()
     Citizen.Wait(1000)
     local pos
@@ -107,4 +112,28 @@ RegisterNetEvent("phone:youtube_music:soundStatus", function(type, musicId, data
             xSound:Destroy(musicId)
         end
     end
+end)
+
+function GetSavedTracks(citizenid, cb)
+    QBCore.Functions.TriggerCallback('getSavedTracks', function(results)
+        if results then
+            cb(results)
+        else
+            cb({})
+        end
+    end, citizenid)
+end
+
+RegisterNUICallback("getSavedTracks", function(data, cb)
+    PlayerData = QBCore.Functions.GetPlayerData()
+    if PlayerData then
+        local citizenid = PlayerData.citizenid
+        GetSavedTracks(citizenid, cb)
+    else
+        cb({})
+    end
+end)
+
+RegisterNUICallback("deleteSong", function(data, cb)
+    TriggerServerEvent('deleteSong', data)
 end)

@@ -15,83 +15,112 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
         rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 
 <style>
-    .button {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
+    /* Table styles */
+    #savedSongsTable {
+        width: 100%;
+        border-collapse: collapse;
     }
 
-    /* make icon bigger */
-    .button ion-icon {
-        font-size: 20px;
+    #savedSongsTable th,
+    #savedSongsTable td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
     }
 
-    .volume-controls {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        margin-bottom: 10px;
+    /* Button column */
+    #savedSongsTable th:nth-child(1),
+    #savedSongsTable td:nth-child(1) {
+        width: 25%;
     }
 
-    .volume-controls .slider {
-        -webkit-appearance: none;
-        width: 70%;
-        padding: 0;
-        height: 5px;
-        border-radius: 5px;
-        background: #d3d3d3;
-        outline: none;
-        -webkit-transition: .2s;
-        transition: opacity .2s;
+    /* Title column */
+    #savedSongsTable th:nth-child(2),
+    #savedSongsTable td:nth-child(2) {
+        width: 75%;
+        overflow: hidden;
+        white-space: nowrap; /* Prevent wrapping */
+        text-overflow: ellipsis; /* Add ellipsis for overflow */
     }
 
-    .volume-controls .slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 15px;
-        height: 15px;
-        border-radius: 50%;
-        background: #26b4df;
-        cursor: pointer;
+    /* Hover effect */
+    #savedSongsTable tbody tr:hover {
+        background-color: #d90166;
     }
 </style>
 
 <body>
     <div id="phone-wrapper">
-        <div class="app" id="content">
-            <div class="app-wrapper">
-                <div class="header">
-                    <div class="title">YouTube Music</div>
-                    <div class="subtitle">Your favorite music on the go!</div>
-                </div>
-                <div class="button-wrapper">
-                    <input id="youtubeUrl" type="text" placeholder="YouTube URL" />
-                    <button id="playButton" class="button"><ion-icon name="play-outline"></ion-icon>Play</button>
-                    <div class="music-controls">
-                        <div class="volume-controls">
-                            <input type="range" min="0" max="100" value="50" class="slider" id="volumeSlider" step="5">
-                            <div class="volume-info">50%</div>
+        <div class="app">
+            <div id="content">
+                <div class="app-wrapper">
+                    <div id="homepage">
+                        <div class="header">
+                            <img src="assets/dystopia.png" width="80%" style="margin: auto;">
+                            <div class="title">Dystopia Music</div>
+                            <div class="subtitle">All your favorite music, on the go!</div>
                         </div>
+                        <div class="button-wrapper">
+                            <input id="youtubeUrl" type="text" style="text-align: center;" placeholder="YouTube URL" />
+                            <button id="playButton" class="button"><ion-icon name="play-outline"></ion-icon>Play</button>
+                            <button id="saveSongButton" class="button">Save Song</button>
+                            <div class="music-controls">
+                                <div class="volume-controls">
+                                    <input type="range" min="0" max="100" value="50" class="slider" id="volumeSlider" step="5">
+                                    <div class="volume-info">50%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="savedSongs-page">
+                        <h1 style="text-align: center;">Saved Songs</h1>
+                        <table id="savedSongsTable">
+                            <tbody>
+                                <!-- Tracks will be appended here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>              
+                    <div class="navigation-bar" id="navbar">
+                        <a href="#" class="nav-icon" id="home-button"><i class="fa fa-home"></i></a>
+                        <a href="#" class="nav-icon" id="savedSongs-button"><i class="fa fa-music"></i></a>
                     </div>
                 </div>
             </div>
-        </div>
+        </div>                      
     </div>
-
     <script src="dev.js"></script>
     <script>
-
-        const resName = location.host
         const playButton = $('#playButton');
         const volumeSlider = $('#volumeSlider');
         const volumeInfo = $('.volume-info');
-
+        const homepage = $('#homepage');
+        const savedSongs = $('#savedSongs-page');
+    
         let isPlaying = false;
+    
+        // Function to fetch video title from YouTube API
+        function fetchVideoTitle(videoId) {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&key=AIzaSyA7oRmnZWyl97Eypqh0KFIIY3889agFoOI&part=snippet`,
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.items.length > 0) {
+                            resolve(data.items[0].snippet.title);
+                        } else {
+                            reject("Video not found");
+                        }
+                    },
+                    error: function () {
+                        reject("Error fetching video title");
+                    }
+                });
+            });
+        }
 
         window.addEventListener("message", (e) => {
             if (e.data == "componentsLoaded") {
@@ -110,19 +139,16 @@
                 });
             }
         });
-
-
-        // if mouse let the slider update the volume
+    
         volumeSlider.on('input', function () {
             volumeInfo.text(`${volumeSlider.val()}%`);
         });
-
+    
         volumeSlider.on('change', function () {
             volumeInfo.text(`${volumeSlider.val()}%`);
             fetchNui('changeVolume', { volume: volumeSlider.val() });
         });
-
-
+    
         playButton.click(() => {
             let youtubeUrl = $('#youtubeUrl').val();
             youtubeUrl = youtubeUrl.replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -133,16 +159,128 @@
                 fetchNui('stopSound');
             } else {
                 if (youtubeUrl.length === 0 || youtubeUrl === '') { return sendNotification({ title: "Please enter a YouTube URL!" }) }
-
+    
                 if (!youtubeUrl.match(/^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+$/)) { return sendNotification({ title: "Please enter a valid YouTube URL!" }) }
-
+    
                 playButton.html('<ion-icon name="stop-outline"></ion-icon>Stop');
                 isPlaying = true;
                 fetchNui('playSound', { url: youtubeUrl });
             }
         });
-    </script>
 
+        $('#saveSongButton').click(() => {
+            const youtubeUrl = $('#youtubeUrl').val();
+
+            if (youtubeUrl.trim() === '') {
+                sendNotification({ title: "Please enter a YouTube URL!" });
+                return;
+            }
+
+            if (!youtubeUrl.match(/^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+$/)) {
+                sendNotification({ title: "Please enter a valid YouTube URL!" });
+                return;
+            }
+
+            fetchNui('saveSong', { url: youtubeUrl });
+        });
+
+    
+        // Add a new function to handle delete context menu
+        function handleDelete(track) {
+            fetchNui('deleteSong', { trackId: track.url });
+        }
+
+        // Function to handle right-click context menu
+        function handleContextMenu(event, track) {
+            // Prevent the default context menu from showing up
+            event.preventDefault();
+
+            // Show the custom context menu
+            setPopUp({
+                title: "Delete Song",
+                description: "Are you sure you want to delete this song?",
+                buttons: [
+                    {
+                        title: "Cancel",
+                        color: "red",
+                        cb: () => {}
+                    },
+                    {
+                        title: "Confirm",
+                        color: "blue",
+                        cb: () => handleDelete(track)
+                    }
+                ]
+            });
+        }
+
+        // Function to attach right-click event listener to each song row
+        function attachContextMenu(row, track) {
+            row.on('contextmenu', function(event) {
+                handleContextMenu(event, track);
+            });
+        }
+
+        $('#savedSongs-button').click(() => {
+            // Show the playlist page and hide the home content
+            homepage.hide();
+            savedSongs.show();
+
+            fetchNui('getSavedTracks').then(tracks => {
+                const tbody = $('#savedSongsTable tbody');
+                tbody.empty(); // Clear existing rows
+
+                // Append each track as a new row in the table
+                tracks.forEach(track => {
+                    // Extract video ID from the URL
+                    const videoId = track.url.match(/(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/|[^\/]+\/videos\/|embed\/|v\/|watch\?v=))([^"&?\/\s]{11})/)[1];
+
+                    // Fetch video title and append to table
+                    fetchVideoTitle(videoId).then(title => {
+                        const row = $(`<tr><td>${title}</td></tr>`);
+
+                        // Attach right-click context menu
+                        attachContextMenu(row, track);
+
+                        // Change cursor on hover
+                        row.hover(function() {
+                            $(this).css('cursor', 'pointer');
+                        }, function() {
+                            $(this).css('cursor', 'auto');
+                        });
+
+                        // Save YouTube URL to clipboard on click
+                        row.click(() => {
+                            // Create a temporary textarea element to copy the text
+                            const tempTextarea = $('<textarea>').val(track.url).css({
+                                position: 'absolute',
+                                left: '-9999px',
+                                top: '0',
+                            }).appendTo($('body'));
+
+                            // Select and copy the text
+                            tempTextarea[0].select();
+                            document.execCommand('copy');
+
+                            // Remove the temporary textarea
+                            tempTextarea.remove();
+                            sendNotification({ title: "YouTube URL copied to cliboard!" });
+                        });
+
+                        tbody.append(row);
+                    }).catch(error => {
+                        console.error(error);
+                    });
+                });
+            });
+        });
+
+        $('#home-button').click(() => {
+            // Show the home content and hide the playlist page
+            homepage.show();
+            savedSongs.hide();
+        });
+    </script>    
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </body>
