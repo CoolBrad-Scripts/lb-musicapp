@@ -4,7 +4,7 @@
 A YouTube Music app built for LB-Phone. Allow players in your community to listen to ANY YouTube video using their in-city phone! This application allows users to save songs to a playlist for easy access at a later time!
 
 ## Features:
-- Play ANY YouTube from URL
+- Play ANY YouTube video from URL
 - Save Songs
 
 
