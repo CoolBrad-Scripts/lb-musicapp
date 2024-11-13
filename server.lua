@@ -22,7 +22,8 @@ end
 
 -- Implement a function to delete the song from the database
 function DeleteSongFromPlaylist(citizenid, trackId)
-    local deleteQuery = "DELETE FROM lb_music WHERE citizenID = ? AND url = ?"
+    -- Update the query to ensure only the first matching row is deleted
+    local deleteQuery = "DELETE FROM lb_music WHERE citizenID = ? AND url = ? LIMIT 1"
     local deleteParams = { citizenid, trackId }
     MySQL.query.await(deleteQuery, deleteParams)
 end
