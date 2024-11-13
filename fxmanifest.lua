@@ -1,7 +1,7 @@
 fx_version "cerulean"
 game "gta5"
 
-author "Red Killer"
+author "Cool Brad Scripts"
 description "Adding youtube music to lb-phone"
 version "1.0.0"
 
