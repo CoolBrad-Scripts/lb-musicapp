@@ -9,6 +9,7 @@ A YouTube Music app built for LB-Phone. Allow players in your community to liste
 
 
 ## Dependencies
+- xsound
 - LB-Phone
 - YouTube API Key
 
